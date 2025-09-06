@@ -2,14 +2,14 @@
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using MonoGameLibrary;
+using MonoGameLibrary.Graphics;
 
 namespace Dungeon_Slime
 {
     public class Game1 : Core
     {
-        private GraphicsDeviceManager _graphics;
-        private SpriteBatch _spriteBatch;
-        private Texture2D _logo;
+        private TextureRegion _slime;
+        private TextureRegion _bat;
 
         public Game1(): base("Dungeon Slime", 1280, 720, false)
         {
@@ -25,7 +25,18 @@ namespace Dungeon_Slime
 
         protected override void LoadContent()
         {
-            _logo = Content.Load<Texture2D>("images/logo");
+            Texture2D atlasTexture = Content.Load<Texture2D>("images/atlas");
+
+            //TextureAtlas atlas = new TextureAtlas(atlasTexture);
+            //atlas.AddRegion("slime", 0, 0, 20, 20);
+            //atlas.AddRegion("bat", 20, 0, 20, 20);
+
+            TextureAtlas atlas = TextureAtlas.FromFile(Content, "images/atlas-definition");
+
+
+            _slime = atlas.GetRegion("slime");
+            _bat = atlas.GetRegion("bat");
+
             // TODO: use this.Content to load your game content here
         }
 
@@ -45,67 +56,12 @@ namespace Dungeon_Slime
             GraphicsDevice.Clear(Color.CornflowerBlue);
 
 
-            Rectangle iconSourceRect = new Rectangle(0, 0, 128, 128);
-            Rectangle wordmarkSourceRect = new Rectangle(150, 34, 458, 58);
-            SpriteBatch.Begin(SpriteSortMode.FrontToBack);
-            SpriteBatch.Draw(
-                _logo,
-                new Vector2
-                (
-                    (Window.ClientBounds.Width) * 0.5f,
-                    (Window.ClientBounds.Height) * 0.5f
-       
-                ),
-                iconSourceRect,   // source rectangle
-                Color.Blue * 1f,    // Colour
-                MathHelper.ToRadians(0),   // Rotation
-                new Vector2
-                (
-                    iconSourceRect.Width / 2,
-                    iconSourceRect.Height /2
-                    
-                ),   // Origin
-                new Vector2
-                (
-                   1.5f,
-                   1f
-                ),   // Scale
-                SpriteEffects.None,   // effects
-                1.0f    // layer depth
-            );
+            SpriteBatch.Begin(samplerState: SamplerState.PointClamp);
 
-
-            SpriteBatch.Draw(
-                _logo,
-                new Vector2
-                (
-                    (Window.ClientBounds.Width) * 0.5f,
-                    (Window.ClientBounds.Height) * 0.5f
-
-                ),
-                wordmarkSourceRect,   // source rectangle
-                Color.Blue * 0.5f,    // Colour
-                MathHelper.ToRadians(0),   // Rotation
-                new Vector2
-                (
-                    wordmarkSourceRect.Width / 2,
-                    wordmarkSourceRect.Height / 2
-
-                ),   // Origin
-                new Vector2
-                (
-                   1.5f,
-                   1f
-                ),   // Scale
-                SpriteEffects.None,   // effects
-                0.0f    // layer depth
-            );
-
-
+            _slime.Draw(SpriteBatch, Vector2.Zero, Color.White, 0.0f, Vector2.One, 4.0f, SpriteEffects.None, 0.0f);
+            _bat.Draw(SpriteBatch, new Vector2(_slime.Width * 4.0f + 10, 0), Color.White, 0.0f, Vector2.One, 4.0f, SpriteEffects.None, 1.0f);
 
             SpriteBatch.End();
-            
-
             // TODO: Add your drawing code here
 
             base.Draw(gameTime);
