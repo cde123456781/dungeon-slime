@@ -8,8 +8,8 @@ namespace Dungeon_Slime
 {
     public class Game1 : Core
     {
-        private TextureRegion _slime;
-        private TextureRegion _bat;
+        private AnimatedSprite _slime;
+        private AnimatedSprite _bat;
 
         public Game1(): base("Dungeon Slime", 1280, 720, false)
         {
@@ -31,11 +31,16 @@ namespace Dungeon_Slime
             //atlas.AddRegion("slime", 0, 0, 20, 20);
             //atlas.AddRegion("bat", 20, 0, 20, 20);
 
-            TextureAtlas atlas = TextureAtlas.FromFile(Content, "images/atlas-definition");
+            TextureAtlas atlas = TextureAtlas.FromFile(Content, "images/atlas-definition.xml");
+            //_slime = atlas.GetRegion("slime");
+            //_bat = atlas.GetRegion("bat");
 
 
-            _slime = atlas.GetRegion("slime");
-            _bat = atlas.GetRegion("bat");
+            _slime = atlas.CreatedAnimatedSprite("slime-animation");
+            _slime.Scale = new Vector2(4.0f, 4.0f);
+
+            _bat = atlas.CreatedAnimatedSprite("bat-animation");
+            _bat.Scale = new Vector2(4.0f, 4.0f);
 
             // TODO: use this.Content to load your game content here
         }
@@ -46,6 +51,9 @@ namespace Dungeon_Slime
                 Exit();
 
             // TODO: Add your update logic here
+
+            _slime.update(gameTime);
+            _bat.update(gameTime);
 
             base.Update(gameTime);
         }
@@ -58,8 +66,8 @@ namespace Dungeon_Slime
 
             SpriteBatch.Begin(samplerState: SamplerState.PointClamp);
 
-            _slime.Draw(SpriteBatch, Vector2.Zero, Color.White, 0.0f, Vector2.One, 4.0f, SpriteEffects.None, 0.0f);
-            _bat.Draw(SpriteBatch, new Vector2(_slime.Width * 4.0f + 10, 0), Color.White, 0.0f, Vector2.One, 4.0f, SpriteEffects.None, 1.0f);
+            _slime.Draw(SpriteBatch, Vector2.One);
+            _bat.Draw(SpriteBatch, new Vector2(_slime.Width + 10, 0));
 
             SpriteBatch.End();
             // TODO: Add your drawing code here
