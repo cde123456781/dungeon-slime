@@ -2,6 +2,8 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
+using MonoGameLibrary.Input;
 
 namespace MonoGameLibrary;
 
@@ -36,6 +38,10 @@ public class Core: Game
     /// </summary>
     public static new ContentManager Content { get; private set; }
 
+    public static InputManager Input { get; private set; }
+
+    public static bool ExitOnEscape { get; set; }
+
     /// <summary>
     /// Creates a new Core instance
     /// </summary>
@@ -68,6 +74,8 @@ public class Core: Game
 
         IsMouseVisible = true;
 
+        ExitOnEscape = true;
+
     }
 
 
@@ -79,6 +87,20 @@ public class Core: Game
 
         SpriteBatch = new SpriteBatch(GraphicsDevice);
 
+        Input = new InputManager();
+
+    }
+
+    protected override void Update(GameTime gameTime)
+    {
+        Input.Update(gameTime);
+
+        if (ExitOnEscape && Input.Keyboard.IsKeyDown(Keys.Escape)) 
+        {
+            Exit();
+        }
+
+        base.Update(gameTime);
     }
 
 }
