@@ -19,6 +19,9 @@ namespace Dungeon_Slime
 
         private const float MOVEMENT_SPEED = 5.0f;
 
+        private Tilemap _tilemap;
+        private Rectangle _roomBounds;
+
         public Game1() : base("Dungeon Slime", 1280, 720, false)
         {
 
@@ -30,20 +33,32 @@ namespace Dungeon_Slime
 
             base.Initialize();
 
-            _batPosition = new Vector2(_slime.Width + 10, 0);
+            Rectangle screenBounds = GraphicsDevice.PresentationParameters.Bounds;
+
+            _roomBounds = new Rectangle(
+                (int)_tilemap.TileWidth,
+                (int)_tilemap.TileHeight,
+                screenBounds.Width - (int)_tilemap.TileWidth * 2,
+                screenBounds.Height - (int)_tilemap.TileHeight * 2
+            );
+
+            int centreRow = _tilemap.Rows / 2;
+            int centreColumn = _tilemap.Columns / 2;
+            _slimePosition = new Vector2(centreColumn * _tilemap.TileWidth, centreRow * _tilemap.TileHeight);
+            _batPosition = new Vector2(_roomBounds.Left, _roomBounds.Top);
 
             AssignRandomBatVelocity();
         }
 
         protected override void LoadContent()
         {
-            Texture2D atlasTexture = Content.Load<Texture2D>("images/atlas");
+            TextureAtlas atlas = TextureAtlas.FromFile(Content, "images/atlas-definition.xml");
 
             //TextureAtlas atlas = new TextureAtlas(atlasTexture);
             //atlas.AddRegion("slime", 0, 0, 20, 20);
             //atlas.AddRegion("bat", 20, 0, 20, 20);
 
-            TextureAtlas atlas = TextureAtlas.FromFile(Content, "images/atlas-definition.xml");
+           
             //_slime = atlas.GetRegion("slime");
             //_bat = atlas.GetRegion("bat");
 
@@ -54,7 +69,8 @@ namespace Dungeon_Slime
             _bat = atlas.CreatedAnimatedSprite("bat-animation");
             _bat.Scale = new Vector2(4.0f, 4.0f);
 
-            // TODO: use this.Content to load your game content here
+            _tilemap = Tilemap.FromFile(Content, "images/tilemap-definition.xml");
+            _tilemap.Scale = new Vector2(4.0f, 4.0f);
         }
 
         protected override void Update(GameTime gameTime)
@@ -68,12 +84,6 @@ namespace Dungeon_Slime
             CheckKeyboardInput();
             CheckGamePadInput();
 
-            Rectangle screenBounds = new Rectangle(
-                0, 
-                0,
-                GraphicsDevice.PresentationParameters.BackBufferWidth,
-                GraphicsDevice.PresentationParameters.BackBufferHeight
-            );
 
             Circle slimeBounds = new Circle(
                 (int)(_slimePosition.X + (_slime.Width * 0.5f)),
@@ -81,21 +91,21 @@ namespace Dungeon_Slime
                 (int)(_slime.Width * 0.5f)
             );
 
-            if (slimeBounds.Left < screenBounds.Left)
+            if (slimeBounds.Left < _roomBounds.Left)
             {
-                _slimePosition.X = screenBounds.Left;
+                _slimePosition.X = _roomBounds.Left;
             }
-            else if (slimeBounds.Right > screenBounds.Right)
+            else if (slimeBounds.Right > _roomBounds.Right)
             {
-                _slimePosition.X = screenBounds.Right - _slime.Width;
+                _slimePosition.X = _roomBounds.Right - _slime.Width;
             }
 
-            if (slimeBounds.Top < screenBounds.Top)
+            if (slimeBounds.Top < _roomBounds.Top)
             {
-                _slimePosition.Y = screenBounds.Top;
-            } else if (slimeBounds.Bottom > screenBounds.Bottom)
+                _slimePosition.Y = _roomBounds.Top;
+            } else if (slimeBounds.Bottom > _roomBounds.Bottom)
             {
-                _slimePosition.Y = screenBounds.Bottom + _slime.Height;
+                _slimePosition.Y = _roomBounds.Bottom - _slime.Height;
             }
 
 
@@ -110,24 +120,24 @@ namespace Dungeon_Slime
 
             Vector2 normal = Vector2.Zero;
 
-            if (batBounds.Left < screenBounds.Left)
+            if (batBounds.Left < _roomBounds.Left)
             {
                 normal.X = Vector2.UnitX.X;
-                newBatPosition.X = screenBounds.Left;
-            } else if (batBounds.Right > screenBounds.Right)
+                newBatPosition.X = _roomBounds.Left;
+            } else if (batBounds.Right > _roomBounds.Right)
             {
                 normal.X = -Vector2.UnitX.X;
-                newBatPosition.X = screenBounds.Right - _bat.Width;
+                newBatPosition.X = _roomBounds.Right - _bat.Width;
             }
 
-            if (batBounds.Top < screenBounds.Top)
+            if (batBounds.Top < _roomBounds.Top)
             {
                 normal.Y = Vector2.UnitY.Y;
-                newBatPosition.Y = screenBounds.Top;
-            } else if (batBounds.Bottom > screenBounds.Bottom)
+                newBatPosition.Y = _roomBounds.Top;
+            } else if (batBounds.Bottom > _roomBounds.Bottom)
             {
                 normal.Y = -Vector2.UnitY.Y;
-                newBatPosition.Y = screenBounds.Bottom - _bat.Height;
+                newBatPosition.Y = _roomBounds.Bottom - _bat.Height;
             }
 
             if (normal != Vector2.Zero)
@@ -140,11 +150,9 @@ namespace Dungeon_Slime
 
             if (slimeBounds.Intersects(batBounds))
             {
-                int totalColumns = GraphicsDevice.PresentationParameters.BackBufferWidth / (int)_bat.Width;
-                int totalRows = GraphicsDevice.PresentationParameters.BackBufferHeight / (int)_bat.Height;
 
-                int column = Random.Shared.Next(0, totalColumns);
-                int row = Random.Shared.Next(0, totalRows);
+                int column = Random.Shared.Next(1, _tilemap.Columns - 1);
+                int row = Random.Shared.Next(1, _tilemap.Rows - 1);
 
                 _batPosition = new Vector2(column * _bat.Width, row * _bat.Height);
 
@@ -172,6 +180,8 @@ namespace Dungeon_Slime
 
 
             SpriteBatch.Begin(samplerState: SamplerState.PointClamp);
+
+            _tilemap.Draw(SpriteBatch);
 
             _slime.Draw(SpriteBatch, _slimePosition);
             _bat.Draw(SpriteBatch, _batPosition);
