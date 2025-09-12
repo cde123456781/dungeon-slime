@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using MonoGameLibrary.Audio;
 using MonoGameLibrary.Input;
 
 namespace MonoGameLibrary;
@@ -41,6 +42,9 @@ public class Core: Game
     public static InputManager Input { get; private set; }
 
     public static bool ExitOnEscape { get; set; }
+
+
+    public static AudioController Audio {  get; private set; }
 
     /// <summary>
     /// Creates a new Core instance
@@ -89,11 +93,22 @@ public class Core: Game
 
         Input = new InputManager();
 
+        Audio = new AudioController();
+
+    }
+
+
+    protected override void UnloadContent()
+    {
+        Audio.Dispose();
+        base.UnloadContent();
     }
 
     protected override void Update(GameTime gameTime)
     {
         Input.Update(gameTime);
+
+        Audio.update();
 
         if (ExitOnEscape && Input.Keyboard.IsKeyDown(Keys.Escape)) 
         {

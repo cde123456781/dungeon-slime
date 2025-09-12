@@ -26,6 +26,7 @@ namespace Dungeon_Slime
 
         private SoundEffect _bounceSoundEffect;
         private SoundEffect _collectSoundEffect;
+        private Song _themeSong;
 
         public Game1() : base("Dungeon Slime", 1280, 720, false)
         {
@@ -53,6 +54,7 @@ namespace Dungeon_Slime
             _batPosition = new Vector2(_roomBounds.Left, _roomBounds.Top);
 
             AssignRandomBatVelocity();
+            Audio.PlaySong(_themeSong);
         }
 
         protected override void LoadContent()
@@ -82,16 +84,8 @@ namespace Dungeon_Slime
             _bounceSoundEffect = Content.Load<SoundEffect>("audio/bounce");
             _collectSoundEffect = Content.Load<SoundEffect>("audio/collect");
 
-            Song theme = Content.Load<Song>("audio/theme");
+            _themeSong = Content.Load<Song>("audio/theme");
 
-            if (MediaPlayer.State == MediaState.Playing)
-            {
-                MediaPlayer.Stop();
-            }
-
-            MediaPlayer.Play(theme);
-
-            MediaPlayer.IsRepeating = true;
         }
 
         protected override void Update(GameTime gameTime)
@@ -166,7 +160,7 @@ namespace Dungeon_Slime
                 normal.Normalize();
                 _batVelocity = Vector2.Reflect(_batVelocity, normal);
 
-                _bounceSoundEffect.Play();
+                Audio.PlaySoundEffect(_bounceSoundEffect);
             }
 
             _batPosition = newBatPosition;
@@ -181,7 +175,7 @@ namespace Dungeon_Slime
 
                 AssignRandomBatVelocity();
 
-                _collectSoundEffect.Play();
+                Audio.PlaySoundEffect(_collectSoundEffect);
             }
 
 
@@ -245,6 +239,26 @@ namespace Dungeon_Slime
             if (Input.Keyboard.IsKeyDown(Keys.D) || Input.Keyboard.IsKeyDown(Keys.Right))
             {
                 _slimePosition.X += speed;
+            }
+
+            // If the M key is pressed, toggle mute state for audio.
+            if (Input.Keyboard.WasKeyJustPressed(Keys.M))
+            {
+                Audio.ToggleMute();
+            }
+
+            // If the + button is pressed, increase the volume.
+            if (Input.Keyboard.WasKeyJustPressed(Keys.OemPlus))
+            {
+                Audio.SongVolume += 0.1f;
+                Audio.SoundEffectVolume += 0.1f;
+            }
+
+            // If the - button was pressed, decrease the volume.
+            if (Input.Keyboard.WasKeyJustPressed(Keys.OemMinus))
+            {
+                Audio.SongVolume -= 0.1f;
+                Audio.SoundEffectVolume -= 0.1f;
             }
         }
 
