@@ -28,6 +28,12 @@ namespace Dungeon_Slime
         private SoundEffect _collectSoundEffect;
         private Song _themeSong;
 
+
+        private SpriteFont _font;
+        private int _score;
+        private Vector2 _scoreTextPosition;
+        private Vector2 _scoreTextOrigin;
+
         public Game1() : base("Dungeon Slime", 1280, 720, false)
         {
 
@@ -55,6 +61,10 @@ namespace Dungeon_Slime
 
             AssignRandomBatVelocity();
             Audio.PlaySong(_themeSong);
+
+            _scoreTextPosition = new Vector2(_roomBounds.Left, _tilemap.TileHeight * 0.5f);
+            float scoreTextYOrigin = _font.MeasureString("Score").Y * 0.5f;
+            _scoreTextOrigin = new Vector2(0, scoreTextYOrigin);
         }
 
         protected override void LoadContent()
@@ -85,6 +95,8 @@ namespace Dungeon_Slime
             _collectSoundEffect = Content.Load<SoundEffect>("audio/collect");
 
             _themeSong = Content.Load<Song>("audio/theme");
+
+            _font = Content.Load<SpriteFont>("fonts/04B_30");
 
         }
 
@@ -176,6 +188,8 @@ namespace Dungeon_Slime
                 AssignRandomBatVelocity();
 
                 Audio.PlaySoundEffect(_collectSoundEffect);
+
+                _score += 100;
             }
 
 
@@ -204,6 +218,21 @@ namespace Dungeon_Slime
 
             _slime.Draw(SpriteBatch, _slimePosition);
             _bat.Draw(SpriteBatch, _batPosition);
+
+
+            SpriteBatch.DrawString(
+                _font,
+                $"Score: {_score}",
+                _scoreTextPosition,
+                Color.White,
+                0.0f,
+                _scoreTextOrigin,
+                1.0f,
+                SpriteEffects.None,
+                0.0f
+             );
+
+
 
             SpriteBatch.End();
             // TODO: Add your drawing code here
