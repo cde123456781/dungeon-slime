@@ -22,7 +22,7 @@ public class Animation
     public Animation(List<TextureRegion> frames, TimeSpan delay)
     {
         Frames = frames;
-        delay = delay;
+        Delay = delay;
     }
 
 

@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using MonoGameLibrary.Audio;
 using MonoGameLibrary.Input;
+using MonoGameLibrary.Scenes;
 
 namespace MonoGameLibrary;
 
@@ -45,6 +46,9 @@ public class Core: Game
 
 
     public static AudioController Audio {  get; private set; }
+
+    private static Scene s_activeScene;
+    private static Scene s_nextScene;
 
     /// <summary>
     /// Creates a new Core instance
@@ -110,12 +114,60 @@ public class Core: Game
 
         Audio.update();
 
-        if (ExitOnEscape && Input.Keyboard.IsKeyDown(Keys.Escape)) 
+        if (ExitOnEscape && Input.Keyboard.WasKeyJustPressed(Keys.Escape)) 
         {
             Exit();
         }
 
+        if (s_nextScene != null)
+        {
+            TransitionScene();
+        }
+
+        if (s_activeScene != null)
+        {
+            s_activeScene.Update(gameTime);
+        }
+
         base.Update(gameTime);
+    }
+
+    protected override void Draw(GameTime gameTime)
+    {
+        if (s_activeScene != null)
+        {
+            s_activeScene.Draw(gameTime);
+        }
+
+        base.Draw(gameTime);
+    }
+
+
+    public static void ChangeScene(Scene next)
+    {
+        if (s_activeScene != next)
+        {
+            s_nextScene = next;
+        }
+    }
+
+
+    private static void TransitionScene()
+    {
+        if (s_activeScene != null)
+        {
+            s_activeScene.Dispose();
+        }
+
+        GC.Collect();
+        s_activeScene = s_nextScene;
+
+        s_nextScene = null;
+
+        if (s_activeScene != null)
+        {
+            s_activeScene.Initialize();
+        }
     }
 
 }
