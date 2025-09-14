@@ -1,5 +1,4 @@
-﻿using Microsoft.VisualBasic.Devices;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -8,6 +7,11 @@ using MonoGameLibrary.Graphics;
 using MonoGameLibrary.Input;
 using MonoGameLibrary.Scenes;
 using System;
+using Gum.DataTypes;
+using Gum.Wireframe;
+using MonoGameGum;
+using Gum.Forms.Controls;
+using MonoGameGum.GueDeriving;
 
 namespace DungeonSlime.Scenes;
 
@@ -27,6 +31,10 @@ public class GameScene : Scene
     private int _score;
     private Vector2 _scoreTextPosition;
     private Vector2 _scoreTextOrigin;
+
+    private Panel _pausePanel;
+    private Button _resumeButton;
+    private SoundEffect _uiSoundEffect;
 
 
     public override void Initialize()
@@ -55,6 +63,8 @@ public class GameScene : Scene
         _scoreTextOrigin = new Vector2(0, scoreTextYOrigin);
 
         AssignRandomBatVelocity();
+
+        InitializeUI();
     }
 
 
@@ -74,11 +84,20 @@ public class GameScene : Scene
         _bounceSoundEffect = Content.Load<SoundEffect>("audio/bounce");
         _collectSoundEffect = Content.Load<SoundEffect>("audio/collect");
         _font = Core.Content.Load<SpriteFont>("fonts/04B_30");
+
+        _uiSoundEffect = Core.Content.Load<SoundEffect>("audio/ui");
     }
 
 
     public override void Update(GameTime gameTime)
-    {
+    { 
+        GumService.Default.Update(gameTime);
+
+        if (_pausePanel.IsVisible)
+        {
+            return;
+        }
+
 
         _slime.update(gameTime);
         _bat.update(gameTime);
@@ -195,7 +214,7 @@ public class GameScene : Scene
 
         if (Core.Input.Keyboard.WasKeyJustPressed(Keys.Escape))
         {
-            Core.ChangeScene(new TitleScene());
+            PauseGame();
         }
 
 
@@ -251,6 +270,12 @@ public class GameScene : Scene
         GamePadInfo gamePadOne = Core.Input.GamePads[(int)PlayerIndex.One];
 
         float speed = MOVEMENT_SPEED;
+        if (gamePadOne.WasButtonJustPressed(Buttons.Start))
+        {
+            PauseGame();
+        }
+
+
         if (gamePadOne.IsButtonDown(Buttons.A))
         {
             speed *= 1.5f;
@@ -290,6 +315,62 @@ public class GameScene : Scene
         }
     }
 
+    private void CreatePausePanel()
+    {
+        _pausePanel = new Panel();
+        _pausePanel.Anchor(Anchor.Center);
+        _pausePanel.Visual.WidthUnits = DimensionUnitType.Absolute;
+        _pausePanel.Visual.HeightUnits = DimensionUnitType.Absolute;
+        _pausePanel.Visual.Height = 70;
+        _pausePanel.Visual.Width = 264;
+        _pausePanel.IsVisible = false;
+        _pausePanel.AddToRoot();
+
+        var background = new ColoredRectangleRuntime();
+        background.Dock(Dock.Fill);
+        background.Color = Color.DarkBlue;
+        _pausePanel.AddChild(background);
+
+        var textInstance = new TextRuntime();
+        textInstance.Text = "PAUSED";
+        textInstance.X = 10f;
+        textInstance.Y = 10f;
+        _pausePanel.AddChild(textInstance);
+
+        _resumeButton = new Button();
+        _resumeButton.Text = "RESUME";
+        _resumeButton.Anchor(Anchor.BottomLeft);
+        _resumeButton.Visual.X = 9f;
+        _resumeButton.Visual.Y = -9f;
+        _resumeButton.Visual.Width = 80;
+        _resumeButton.Click += HandleResumeButtonClicked;
+        _pausePanel.AddChild(_resumeButton);
+
+        var quitButton = new Button();
+        quitButton.Text = "QUIT";
+        quitButton.Anchor(Anchor.BottomRight);
+        quitButton.Visual.X = -9f;
+        quitButton.Visual.Y = -9f;
+        quitButton.Width = 80;
+        quitButton.Click += HandleQuitButtonClicked;
+
+        _pausePanel.AddChild(quitButton);
+        
+    }
+
+    private void HandleResumeButtonClicked(object sender, EventArgs e)
+    {
+        Core.Audio.PlaySoundEffect(_uiSoundEffect);
+
+        _pausePanel.IsVisible = false;
+    }
+
+    private void HandleQuitButtonClicked(object sender, EventArgs e)
+    {
+        Core.Audio.PlaySoundEffect(_uiSoundEffect);
+
+        Core.ChangeScene(new TitleScene());
+    }
 
     public override void Draw(GameTime gameTime)
     {
@@ -321,6 +402,20 @@ public class GameScene : Scene
 
         Core.SpriteBatch.End();
 
+        GumService.Default.Draw();
     }
 
+
+    private void PauseGame()
+    {
+        _pausePanel.IsVisible = true;
+        _resumeButton.IsFocused = true;
+    }
+
+    private void InitializeUI()
+    {
+        GumService.Default.Root.Children.Clear();
+
+        CreatePausePanel();
+    }
 }
