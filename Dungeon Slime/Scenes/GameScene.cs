@@ -12,8 +12,10 @@ using Gum.Wireframe;
 using MonoGameGum;
 using Gum.Forms.Controls;
 using MonoGameGum.GueDeriving;
+using Dungeon_Slime.UI;
+using Gum.Managers;
 
-namespace DungeonSlime.Scenes;
+namespace Dungeon_Slime.Scenes;
 
 public class GameScene : Scene
 {
@@ -33,8 +35,10 @@ public class GameScene : Scene
     private Vector2 _scoreTextOrigin;
 
     private Panel _pausePanel;
-    private Button _resumeButton;
+    private AnimatedButton _resumeButton;
     private SoundEffect _uiSoundEffect;
+
+    private TextureAtlas _atlas;
 
 
     public override void Initialize()
@@ -70,12 +74,12 @@ public class GameScene : Scene
 
     public override void LoadContent()
     {
-        TextureAtlas atlas = TextureAtlas.FromFile(Core.Content, "images/atlas-definition.xml");
+        _atlas = TextureAtlas.FromFile(Core.Content, "images/atlas-definition.xml");
 
-        _slime = atlas.CreatedAnimatedSprite("slime-animation");
+        _slime = _atlas.CreatedAnimatedSprite("slime-animation");
         _slime.Scale = new Vector2(4.0f, 4.0f);
 
-        _bat = atlas.CreatedAnimatedSprite("bat-animation");
+        _bat = _atlas.CreatedAnimatedSprite("bat-animation");
         _bat.Scale = new Vector2(4.0f, 4.0f);
 
         _tilemap = Tilemap.FromFile(Content, "images/tilemap-definition.xml");
@@ -326,18 +330,28 @@ public class GameScene : Scene
         _pausePanel.IsVisible = false;
         _pausePanel.AddToRoot();
 
-        var background = new ColoredRectangleRuntime();
+        TextureRegion backgroundRegion = _atlas.GetRegion("panel-background");
+
+        NineSliceRuntime background = new NineSliceRuntime();
         background.Dock(Dock.Fill);
-        background.Color = Color.DarkBlue;
+        background.Texture = backgroundRegion.Texture;
+        background.TextureAddress = TextureAddress.Custom;
+        background.TextureHeight = backgroundRegion.Height;
+        background.TextureLeft = backgroundRegion.SourceRectangle.Left;
+        background.TextureTop = backgroundRegion.SourceRectangle.Top;
+        background.TextureWidth = backgroundRegion.Width;
         _pausePanel.AddChild(background);
 
-        var textInstance = new TextRuntime();
+        TextRuntime textInstance = new TextRuntime();
         textInstance.Text = "PAUSED";
+        textInstance.CustomFontFile = @"fonts/04b_30.fnt";
+        textInstance.UseCustomFont = true;
+        textInstance.FontScale = 0.5f;
         textInstance.X = 10f;
         textInstance.Y = 10f;
         _pausePanel.AddChild(textInstance);
 
-        _resumeButton = new Button();
+        _resumeButton = new AnimatedButton(_atlas);
         _resumeButton.Text = "RESUME";
         _resumeButton.Anchor(Anchor.BottomLeft);
         _resumeButton.Visual.X = 9f;
@@ -346,7 +360,7 @@ public class GameScene : Scene
         _resumeButton.Click += HandleResumeButtonClicked;
         _pausePanel.AddChild(_resumeButton);
 
-        var quitButton = new Button();
+        AnimatedButton quitButton = new AnimatedButton(_atlas);
         quitButton.Text = "QUIT";
         quitButton.Anchor(Anchor.BottomRight);
         quitButton.Visual.X = -9f;
