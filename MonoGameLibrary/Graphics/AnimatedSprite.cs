@@ -28,7 +28,7 @@ public class AnimatedSprite : Sprite
     }
 
 
-    public void update(GameTime gameTime)
+    public void Update(GameTime gameTime)
     {
         _elapsed += gameTime.ElapsedGameTime; 
 
