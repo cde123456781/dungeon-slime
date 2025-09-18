@@ -42,6 +42,10 @@ public class GameScene : Scene
 
     private GameState _state;
 
+    private Effect _grayscaleEffect;
+    private float _saturation = 1.0f;
+    private const float FADE_SPEED = 0.02f;
+
     public override void Initialize()
     {
         base.Initialize();
@@ -122,6 +126,8 @@ public class GameScene : Scene
         _bat = new Bat(batAnimation, bounceSoundEffect);
 
         _collectSoundEffect = Content.Load<SoundEffect>("audio/collect");
+
+        _grayscaleEffect = Content.Load<Effect>("effects/grayscaleEffect");
     }
 
 
@@ -129,11 +135,15 @@ public class GameScene : Scene
     {
         _ui.Update(gameTime);
 
-        if (_state == GameState.GameOver)
-        {
-            return;
-        }
 
+        if (_state != GameState.Playing)
+        {
+            _saturation = Math.Max(0.0f, _saturation - FADE_SPEED);
+            if (_state == GameState.GameOver)
+            {
+                return;
+            }
+        }
         if (GameController.Pause())
         {
             TogglePause();
@@ -263,6 +273,8 @@ public class GameScene : Scene
         {
             _ui.ShowPausePanel();
             _state = GameState.Paused;
+
+            _saturation = 1.0f;
         }
     }
 
@@ -270,15 +282,24 @@ public class GameScene : Scene
     {
         _ui.ShowGameOverPanel();
         _state = GameState.GameOver;
+        _saturation = 1.0f;
     }
 
     public override void Draw(GameTime gameTime)
     {
         Core.GraphicsDevice.Clear(Color.CornflowerBlue);
 
-        Core.SpriteBatch.Begin(samplerState: SamplerState.PointClamp);
+        if (_state != GameState.Playing)
+        {
+            _grayscaleEffect.Parameters["Saturation"].SetValue(_saturation);
+            Core.SpriteBatch.Begin(samplerState: SamplerState.PointClamp, effect: _grayscaleEffect);
 
-        _tilemap.Draw(Core.SpriteBatch);
+        } else
+        {
+            Core.SpriteBatch.Begin(samplerState: SamplerState.PointClamp);
+        }
+
+            _tilemap.Draw(Core.SpriteBatch);
         _slime.Draw();
         _bat.Draw();
         Core.SpriteBatch.End();
